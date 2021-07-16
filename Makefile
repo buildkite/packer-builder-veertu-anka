@@ -10,7 +10,7 @@ BIN_FULL := bin/$(BIN)_$(OS_TYPE)_$(ARCH)
 
 .DEFAULT_GOAL := help
 
-all: lint go.lint clean go.hcl2spec go.build go.test anka.clean-images anka.clean-clones uninstall
+all: go.lint clean go.hcl2spec go.build go.test install lint anka.clean-images anka.clean-clones uninstall
 
 #help:	@ List available tasks on this project
 help:
@@ -22,14 +22,17 @@ go.lint:
 
 #go.test:		@ Run `go test` against the current tests
 go.test:
+	go mod tidy
+	go install github.com/golang/mock/mockgen@v1.6.0
+	mockgen -source=client/client.go -destination=mocks/client_mock.go -package=mocks
 	go test -v builder/anka/*.go
 	go test -v post-processor/ankaregistry/*.go
 
 #go.hcl2spec:		@ Run `go generate` to generate hcl2 config specs
 go.hcl2spec:
-	GOOS=$(OS_TYPE) go install github.com/hashicorp/packer/cmd/mapstructure-to-hcl2
-	GOOS=$(OS_TYPE) PATH="$(shell pwd):${PATH}" go generate builder/anka/config.go
-	GOOS=$(OS_TYPE) PATH="$(shell pwd):${PATH}" go generate post-processor/ankaregistry/post-processor.go
+	go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest
+	GOOS=$(OS_TYPE) go generate builder/anka/config.go
+	GOOS=$(OS_TYPE) go generate post-processor/ankaregistry/post-processor.go
 
 #go.build:		@ Run `go build` to generate the binary
 go.build:
@@ -90,3 +93,9 @@ anka.clean-clones:
 anka.wipe-anka:
 	-rm -rf ~/Library/Application\ Support/Veertu
 	-rm -rf ~/.anka
+
+#generate-docs:		@ Generate packer docs
+generate-docs:
+	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest
+	@packer-sdc renderdocs -src docs -partials docs-partials/ -dst docs/
+	@/bin/sh -c "[ -d docs ] && zip -r docs.zip docs/"
