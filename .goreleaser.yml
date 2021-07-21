@@ -15,13 +15,12 @@ builds:
     hooks:
       post:
         - cmd: bash -c "rm -f /tmp/packer-plugins-check;
-              go install github.com/hashicorp/packer/cmd/packer-plugins-check@latest 1>/dev/null &&
-              ( packer-plugins-check -load={{ .ProjectName }}_{{ .Os }}_{{ .Arch }} &>/tmp/packer-plugins-check && exit $? ||
-              EC=$?; [[ $EC -gt 0 ]] && tail /tmp/packer-plugins-check; exit $EC )"
+              ( go install github.com/hashicorp/packer/cmd/packer-plugins-check@latest && packer-plugins-check -load={{ .ProjectName }}_{{ .Os }}_{{ .Arch }} ) &>/tmp/packer-plugins-check && exit $? ||
+              EC=$?; [[ $EC -gt 0 ]] && tail /tmp/packer-plugins-check; exit $EC"
           dir: "{{ dir .Path }}"
         - cmd: bash -c "chmod +x {{ .ProjectName }}_{{ .Os }}_{{ .Arch }}; ls -lah $(pwd)/{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
           dir: "{{ dir .Path }}"
-        - cmd: bash -c "cp -rfp {{ dir .Path }}/{{ .ProjectName }}_{{ .Os }}_{{ .Arch }} ./ && PACKER_PLUGIN_PATH='./' make validate-examples"
+        - cmd: bash -c "cp -rfp {{ dir .Path }}/{{ .ProjectName }}_{{ .Os }}_{{ .Arch }} ./ && PACKER_PLUGIN_PATH=\"./\" make validate-examples"
     flags:
       - -trimpath #removes all file system paths from the compiled executable
     ldflags:
