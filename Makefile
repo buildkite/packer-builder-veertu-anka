@@ -4,13 +4,13 @@ FLAGS := -X main.commit=$(LATEST-GIT-SHA) -X main.version=$(VERSION)
 BIN := packer-plugin-veertu-anka
 ARCH := amd64
 OS_TYPE ?= $(shell uname -s | tr '[:upper:]' '[:lower:]')
-BIN_FULL := bin/$(BIN)_$(OS_TYPE)_$(ARCH)
+BIN_FULL ?= bin/$(BIN)_$(OS_TYPE)_$(ARCH)
 
-.PHONY: go.lint lint go.test test clean anka.clean-images
+.PHONY: go.lint validate-examples go.test test clean anka.clean-images
 
 .DEFAULT_GOAL := help
 
-all: go.lint clean go.hcl2spec go.build go.test install lint anka.clean-images anka.clean-clones uninstall
+all: go.lint clean go.hcl2spec go.build go.test install validate-examples anka.clean-images anka.clean-clones uninstall
 
 #help:	@ List available tasks on this project
 help:
@@ -22,7 +22,6 @@ go.lint:
 
 #go.test:		@ Run `go test` against the current tests
 go.test:
-	go mod tidy
 	go install github.com/golang/mock/mockgen@v1.6.0
 	mockgen -source=client/client.go -destination=mocks/client_mock.go -package=mocks
 	go test -v builder/anka/*.go
@@ -39,8 +38,8 @@ go.build:
 	GOARCH=$(ARCH) go build $(RACE) -ldflags "$(FLAGS)" -o $(BIN_FULL)
 	chmod +x $(BIN_FULL)
 
-#lint:  @ Run `packer validate` against packer definitions
-lint:
+#validate-examples:  @ Run `packer validate` against example packer definitions using the built package
+validate-examples:
 	packer validate examples/create-from-installer.pkr.hcl
 	packer validate examples/create-from-installer-with-post-processing.pkr.hcl
 	packer validate examples/clone-existing.pkr.hcl
@@ -57,7 +56,7 @@ install:
 
 #uninstall:		@ Delete the binary from the packer plugins folder
 uninstall:
-	rm -f ~/.packer.d/plugins/$(BIN)
+	rm -f ~/.packer.d/plugins/$(BIN)*
 
 #build-and-install:		@ Run make targets to setup the initialize the binary
 build-and-install:

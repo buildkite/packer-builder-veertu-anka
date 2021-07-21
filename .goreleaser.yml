@@ -4,44 +4,32 @@ env:
   - CGO_ENABLED=0
 before:
   hooks:
-    # We strongly recommend running tests to catch any regression before release.
-    # Even though, this an optional step.
-    # - make all
-    # As part of the release doc files are included as a separate deliverable for
-    # consumption by Packer.io. To include a separate docs.zip uncomment the following command.
-    #- make ci-release-docs
+    - make go.lint
+    - make go.test
+    - make go.hcl2spec
 builds:
   # A separated build to run the packer-plugins-check only once for a linux_amd64 binary
   -
-    id: plugin-check
+    id: build
     mod_timestamp: '{{ .CommitTimestamp }}'
     hooks:
       post:
-        # This will check plugin compatibility against latest version of Packer
-        - cmd: |
-            go install github.com/hashicorp/packer/cmd/packer-plugins-check@latest && packer-plugins-check -load={{ .Name }}
+        - cmd: bash -c "rm -f /tmp/packer-plugins-check;
+              go install github.com/hashicorp/packer/cmd/packer-plugins-check@latest &&
+              ( packer-plugins-check -load={{ .ProjectName }}_{{ .Os }}_{{ .Arch }} &>/tmp/packer-plugins-check && exit $? ||
+              EC=$?; [[ $EC -gt 0 ]] && tail /tmp/packer-plugins-check; exit $EC )"
           dir: "{{ dir .Path }}"
+        - cmd: bash -c "chmod +x {{ .ProjectName }}_{{ .Os }}_{{ .Arch }}; ls -lah $(pwd)/{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+          dir: "{{ dir .Path }}"
+        - cmd: bash -c "cp -rfp {{ dir .Path }}/{{ .ProjectName }}_{{ .Os }}_{{ .Arch }} ./ && PACKER_PLUGIN_PATH='./' make validate-examples"
     flags:
       - -trimpath #removes all file system paths from the compiled executable
     ldflags:
       - '-s -w -X main.commit={{ .Commit }} -X main.version={{ .Version }}'
-    goos:
-      - linux
     goarch:
       - amd64
-    binary: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
-  -
-    mod_timestamp: '{{ .CommitTimestamp }}'
-    flags:
-      - -trimpath #removes all file system paths from the compiled executable
-    ldflags:
-      - '-s -w -X main.commit={{ .Commit }} -X main.version={{ .Version }}'    
-    goos:
-      - linux
-      - darwin
-    goarch:
-      - amd64
-    binary: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    binary: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}'
+    no_unique_dist_dir: true
 archives:
   - format: zip
     files:
