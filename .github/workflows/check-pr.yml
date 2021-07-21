@@ -20,11 +20,6 @@ jobs:
       - name: Describe plugin
         id: plugin_describe
         run: echo "::set-output name=api_version::$(go run . describe | jq -r '.api_version')"
-      - name: Run GoReleaser check
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: check
       - name: Run GoReleaser build
         uses: goreleaser/goreleaser-action@v2
         with:

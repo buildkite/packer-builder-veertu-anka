@@ -18,6 +18,7 @@ help:
 
 #go.lint:		@ Run `golangci-lint run` against the current code
 go.lint:
+  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sudo sh -s -- -b /usr/local/bin v1.40.1
 	golangci-lint run --fast
 
 #go.test:		@ Run `go test` against the current tests
