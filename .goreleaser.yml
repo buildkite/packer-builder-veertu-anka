@@ -15,7 +15,7 @@ builds:
     hooks:
       post:
         - cmd: bash -c "rm -f /tmp/packer-plugins-check;
-              go install github.com/hashicorp/packer/cmd/packer-plugins-check@latest &&
+              go install github.com/hashicorp/packer/cmd/packer-plugins-check@latest 1>/dev/null &&
               ( packer-plugins-check -load={{ .ProjectName }}_{{ .Os }}_{{ .Arch }} &>/tmp/packer-plugins-check && exit $? ||
               EC=$?; [[ $EC -gt 0 ]] && tail /tmp/packer-plugins-check; exit $EC )"
           dir: "{{ dir .Path }}"
