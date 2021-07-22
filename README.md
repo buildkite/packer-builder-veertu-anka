@@ -342,47 +342,17 @@ build {
 
 You will need a recent golang installed and setup. See `go.mod` for which version is expected.
 
-We use [gomock](https://github.com/golang/mock) to quickly and reliably mock our interfaces for testing. This allows us to easily test when we expect logic to be called without having to rewrite golang standard library functions with custom mock logic. To generate one of these mocked interfaces, installed the mockgen binary by following the link provided.
+We use [gomock](https://github.com/golang/mock) to quickly and reliably mock our interfaces for testing. This allows us to easily test when we expect logic to be called without having to rewrite golang standard library functions with custom mock logic. To generate one of these mocked interfaces, installed the mockgen binary by following the link provided and then run the `make go.test`.
+
+### Building, Linting, and Testing
+
+We recommend using goreleaser to perform all of the building, linting, and testing:
 
 ```bash
-mockgen -source=client/client.go -destination=mocks/client_mock.go -package=mocks
+goreleaser build --single-target --snapshot --rm-dist
 ```
 
-### Building
-
-```bash
-make go.hcl2spec go.build
-```
-
-### Linting
-
-```bash
-MacOS: brew install golangci-lint
-Linux: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.40.1
-```
-
-```bash
-make go.lint
-make lint
-```
-
-### Testing
-
-GO tests are available running
-
-```bash
-make go.test
-```
-
-To test a basic vm creation, run:
-
-```bash
-make create-test
-```
-
--or-
-
-with packer directly:
+When testing with an example HCL:
 
 ```bash
 export PACKER_LOG=1; packer build examples/create-from-installer.pkr.hcl

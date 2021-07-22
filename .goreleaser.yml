@@ -25,6 +25,21 @@ builds:
       - -trimpath #removes all file system paths from the compiled executable
     ldflags:
       - '-s -w -X main.commit={{ .Commit }} -X main.version={{ .Version }}'
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    binary: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}'
+    no_unique_dist_dir: true
+  -
+    id: build2
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath #removes all file system paths from the compiled executable
+    ldflags:
+      - '-s -w -X main.commit={{ .Commit }} -X main.version={{ .Version }}'
+    goos:
+      - linux
     goarch:
       - amd64
     binary: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}'
@@ -33,22 +48,22 @@ archives:
   - format: zip
     files:
       - none*
-    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
-checksum:
-  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
-  algorithm: sha256
-signs:
-  - artifacts: checksum
-    args:
-      # if you are using this is in a GitHub action or some other automated pipeline, you
-      # need to pass the batch flag to indicate its not interactive.
-      - "--batch"
-      - "--local-user"
-      - "{{ .Env.GPG_FINGERPRINT }}"
-      - "--output"
-      - "${signature}"
-      - "--detach-sign"
-      - "${artifact}"
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
+# checksum:
+#   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+#   algorithm: sha256
+# signs:
+#   - artifacts: checksum
+#     args:
+#       # if you are using this is in a GitHub action or some other automated pipeline, you
+#       # need to pass the batch flag to indicate its not interactive.
+#       - "--batch"
+#       - "--local-user"
+#       - "{{ .Env.GPG_FINGERPRINT }}"
+#       - "--output"
+#       - "${signature}"
+#       - "--detach-sign"
+#       - "${artifact}"
 release:
   # If you want to manually examine the release before its live, uncomment this line:
   # draft: true
@@ -56,6 +71,7 @@ release:
   # To include a separate docs.zip uncomment the extra_files config and the docs.zip command hook above.
   #extra_files:
   #- glob: ./docs.zip
+  disable: true
 
 changelog:
   skip: true
